@@ -3,200 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-Systems Schul-Login</title>
+    <title>Schul-Portal (Lite)</title>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: #f0f2f5; 
-            margin: 0; padding: 0;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-
-        /* Container für Login und App */
-        .container { width: 90%; max-width: 400px; padding: 20px; }
-
-        /* Login Box Styles */
-        .auth-box {
-            background: white; padding: 30px; border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center;
-        }
-        .auth-box h2 { margin-top: 0; color: #333; }
-        .hidden { display: none !important; }
-
-        input {
-            width: 100%; padding: 12px; margin: 8px 0;
-            border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px;
-        }
-
-        button {
-            width: 100%; padding: 12px; margin-top: 10px;
-            background: #007bff; color: white; border: none; border-radius: 6px;
-            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding-bottom: 50px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 20px; }
+        input, button, textarea { width: 100%; padding: 12px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; }
         button:hover { background: #0056b3; }
-        
-        .switch-btn {
-            background: none; color: #007bff; margin-top: 10px; font-weight: normal; font-size: 14px;
-        }
-        .switch-btn:hover { background: none; text-decoration: underline; color: #0056b3; }
-
-        /* Chat Styles (App) */
-        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logout-btn { background: #dc3545; width: auto; padding: 5px 15px; font-size: 14px; }
-        
-        .post { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .post small { color: #888; font-size: 12px; }
-        .post h4 { margin: 0 0 5px 0; color: #007bff; }
+        .nav-tabs { display: flex; justify-content: space-around; background: white; padding: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .nav-btn { background: none; color: #555; border: none; font-size: 16px; border-bottom: 3px solid transparent; }
+        .nav-btn.active { color: #007bff; border-bottom: 3px solid #007bff; }
+        .post img { max-width: 100%; border-radius: 5px; margin-top: 10px; }
+        .hidden { display: none !important; }
+        .teacher-badge { background: #dc3545; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-
-    <div id="authContainer" class="auth-box">
+<div id="authContainer" class="container" style="height: 100vh; display: flex; align-items: center;">
+    <div class="card">
         <h2 id="authTitle">Anmelden</h2>
-        <input type="email" id="emailInput" placeholder="E-Mail Adresse">
+        <input type="email" id="emailInput" placeholder="E-Mail">
         <input type="password" id="passwordInput" placeholder="Passwort">
-        
-        <button id="authBtn">Einloggen</button>
-        <button id="toggleBtn" class="switch-btn">Kein Konto? Registrieren</button>
-        <p id="errorMsg" style="color: red; font-size: 14px; display: none;"></p>
+        <button id="mainAuthBtn">Einloggen</button>
+        <button id="toggleAuthMode" style="background:grey">Kein Konto? Registrieren</button>
+        <p id="errorMsg" style="color:red; display:none;"></p>
+    </div>
+</div>
+
+<div id="appContainer" class="hidden">
+    <div class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('chat')">💬 Pausenhof</button>
+        <button class="nav-btn" onclick="switchTab('tasks')">📚 Aufträge</button>
+        <button onclick="logout()" style="width:auto; background:#dc3545; padding:5px 10px;">X</button>
     </div>
 
-    <div id="appContainer" class="hidden">
-        <div class="app-header">
-            <h3>🏫 K-Systems Feed</h3>
-            <button id="logoutBtn" class="logout-btn">Abmelden</button>
+    <div class="container" style="margin-top: 20px;">
+        <div id="inputSection" class="card">
+            <h3>Neuer Beitrag</h3>
+            <input type="text" id="postTitle" placeholder="Titel (Optional)">
+            <textarea id="postText" rows="3" placeholder="Nachricht..."></textarea>
+            
+            <label style="font-size:12px; color:#666;">Bild hinzufügen (Max 1 MB!):</label>
+            <input type="file" id="imageInput" accept="image/*">
+            
+            <button id="sendBtn">Absenden 🚀</button>
         </div>
 
-        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <textarea id="msgInput" style="width:100%; height:60px; border:1px solid #ddd; padding:10px; border-radius:6px;" placeholder="Nachricht schreiben..."></textarea>
-            <button id="sendBtn">Senden 🚀</button>
-        </div>
-
-        <div id="feed">Lade Nachrichten...</div>
+        <div id="feedList">Lade...</div>
     </div>
-
 </div>
 
 <script type="module">
+    // Wir importieren NUR Auth und Firestore (Kein Storage!)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // Deine Config
     const firebaseConfig = {
         apiKey: "AIzaSyC1lOo3wm36dSi1Ec574tGaoySlg_783gI",
         authDomain: "k-systems-7f298.firebaseapp.com",
         projectId: "k-systems-7f298",
         storageBucket: "k-systems-7f298.firebasestorage.app",
         messagingSenderId: "768481373703",
-        appId: "1:768481373703:web:64f3e07ceba8a6b0c7c4a2",
-        measurementId: "G-R3JNW22EZ8"
+        appId: "1:768481373703:web:64f3e07ceba8a6b0c7c4a2"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Elemente holen
+    let currentUser = null;
+    let currentTab = 'chat';
+    const ADMIN_EMAIL = "kayden.schunack@gmail.com";
+
+    // --- AUTH ---
     const authContainer = document.getElementById('authContainer');
     const appContainer = document.getElementById('appContainer');
-    const authTitle = document.getElementById('authTitle');
-    const authBtn = document.getElementById('authBtn');
-    const toggleBtn = document.getElementById('toggleBtn');
-    const emailInput = document.getElementById('emailInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const errorMsg = document.getElementById('errorMsg');
+    let isRegistering = false;
 
-    let isLoginMode = true; // Merken, ob wir gerade Login oder Registrieren machen
-
-    // Prüfen, ob User eingeloggt ist
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // User ist da -> Login weg, Chat zeigen
+            currentUser = user;
             authContainer.classList.add('hidden');
             appContainer.classList.remove('hidden');
-            document.body.style.alignItems = "flex-start"; // Layout anpassen
-            loadChat(); // Chat starten
+            loadFeed();
+            updateInputVisibility();
         } else {
-            // Niemand da -> Login zeigen, Chat weg
+            currentUser = null;
             authContainer.classList.remove('hidden');
             appContainer.classList.add('hidden');
-            document.body.style.alignItems = "center";
         }
     });
 
-    // Umschalten zwischen Login und Registrieren
-    toggleBtn.addEventListener('click', () => {
-        isLoginMode = !isLoginMode;
-        if (isLoginMode) {
-            authTitle.innerText = "Anmelden";
-            authBtn.innerText = "Einloggen";
-            toggleBtn.innerText = "Kein Konto? Registrieren";
+    document.getElementById('mainAuthBtn').onclick = async () => {
+        try {
+            const email = document.getElementById('emailInput').value;
+            const pw = document.getElementById('passwordInput').value;
+            if(isRegistering) await createUserWithEmailAndPassword(auth, email, pw);
+            else await signInWithEmailAndPassword(auth, email, pw);
+        } catch(e) { alert(e.message); }
+    };
+
+    document.getElementById('toggleAuthMode').onclick = () => {
+        isRegistering = !isRegistering;
+        document.getElementById('authTitle').innerText = isRegistering ? "Registrieren" : "Anmelden";
+        document.getElementById('mainAuthBtn').innerText = isRegistering ? "Registrieren" : "Einloggen";
+    };
+
+    window.logout = () => signOut(auth);
+
+    // --- TABS ---
+    window.switchTab = (tab) => {
+        currentTab = tab;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        loadFeed();
+        updateInputVisibility();
+    };
+
+    function updateInputVisibility() {
+        const section = document.getElementById('inputSection');
+        if (currentTab === 'chat') {
+            section.classList.remove('hidden');
         } else {
-            authTitle.innerText = "Konto erstellen";
-            authBtn.innerText = "Registrieren";
-            toggleBtn.innerText = "Zurück zum Login";
+            // Nur Kayden sieht Eingabe bei Aufträgen
+            if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
         }
-        errorMsg.style.display = 'none';
-    });
+    }
 
-    // Login oder Registrieren Button Klick
-    authBtn.addEventListener('click', async () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
+    // --- HACK: BILD ZU TEXT KONVERTIEREN ---
+    const convertBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(file);
+            fileReader.onload = () => resolve(fileReader.result);
+            fileReader.onerror = (error) => reject(error);
+        });
+    };
+
+    document.getElementById('sendBtn').onclick = async () => {
+        const title = document.getElementById('postTitle').value;
+        const text = document.getElementById('postText').value;
+        const fileInput = document.getElementById('imageInput');
+        
+        if (!text && !fileInput.files.length) return;
+
+        document.getElementById('sendBtn').innerText = "Sende...";
 
         try {
-            if (isLoginMode) {
-                await signInWithEmailAndPassword(auth, email, password);
-            } else {
-                await createUserWithEmailAndPassword(auth, email, password);
-            }
-        } catch (error) {
-            errorMsg.innerText = error.message;
-            errorMsg.style.display = 'block';
-        }
-    });
-
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        signOut(auth);
-    });
-
-    // --- CHAT LOGIK (fast gleich wie vorher) ---
-    function loadChat() {
-        const q = query(collection(db, "schul_chat"), orderBy("timestamp", "desc"));
-        onSnapshot(q, (snapshot) => {
-            const feed = document.getElementById('feed');
-            feed.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const userEmail = data.user || "Unbekannt";
-                // Nur den Teil vor dem @ anzeigen als Name
-                const shortName = userEmail.split('@')[0]; 
-                
-                feed.innerHTML += `
-                    <div class="post">
-                        <h4>${shortName}</h4>
-                        <p>${data.text}</p>
-                        <small>${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : '...'}</small>
-                    </div>`;
-            });
-        });
-
-        // Senden Button
-        document.getElementById('sendBtn').onclick = async () => {
-            const msg = document.getElementById('msgInput').value;
-            if (msg.trim() === "") return;
+            let imageBase64 = null;
             
-            await addDoc(collection(db, "schul_chat"), {
-                user: auth.currentUser.email, // Wir speichern jetzt die echte E-Mail!
-                text: msg,
+            // Wenn ein Bild gewählt wurde, wandle es in Text um
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 1000000) { // 1MB Limit prüfen
+                    alert("Bild ist zu groß! Bitte unter 1MB bleiben.");
+                    document.getElementById('sendBtn').innerText = "Senden 🚀";
+                    return;
+                }
+                imageBase64 = await convertBase64(file);
+            }
+
+            const coll = currentTab === 'chat' ? 'chat_public' : 'school_tasks';
+            
+            await addDoc(collection(db, coll), {
+                user: currentUser.email,
+                title: title,
+                text: text,
+                image: imageBase64, // Hier speichern wir den Bild-Code direkt!
                 timestamp: serverTimestamp()
             });
-            document.getElementById('msgInput').value = "";
-        };
+
+            document.getElementById('postText').value = "";
+            document.getElementById('postTitle').value = "";
+            fileInput.value = "";
+            document.getElementById('sendBtn').innerText = "Senden 🚀";
+
+        } catch (e) {
+            console.error(e);
+            alert("Fehler: " + e.message);
+            document.getElementById('sendBtn').innerText = "Fehler";
+        }
+    };
+
+    // --- FEED ---
+    let unsubscribe;
+    function loadFeed() {
+        if(unsubscribe) unsubscribe();
+        const coll = currentTab === 'chat' ? 'chat_public' : 'school_tasks';
+        const list = document.getElementById('feedList');
+        
+        const q = query(collection(db, coll), orderBy("timestamp", "desc"));
+        
+        unsubscribe = onSnapshot(q, (snapshot) => {
+            list.innerHTML = "";
+            if (snapshot.empty) list.innerHTML = "<p style='text-align:center'>Nichts da.</p>";
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const isTeacher = data.user.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                const name = data.user.split('@')[0];
+                
+                list.innerHTML += `
+                    <div class="card" style="${isTeacher && currentTab === 'tasks' ? 'border-left:5px solid red' : ''}">
+                        <div style="display:flex; justify-content:space-between">
+                            <strong>${name} ${isTeacher ? '<span class="teacher-badge">Lehrer</span>' : ''}</strong>
+                        </div>
+                        ${data.title ? `<b>${data.title}</b><br>` : ''}
+                        <p>${data.text}</p>
+                        ${data.image ? `<img src="${data.image}">` : ''}
+                    </div>
+                `;
+            });
+        });
     }
 </script>
 
