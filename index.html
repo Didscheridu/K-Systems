@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>K-Systems Schul-Feed</title>
+    <style>
+        /* Design */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f4f6f8; 
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            margin: 0;
+            padding-top: 20px;
+        }
+        .container { width: 90%; max-width: 500px; padding-bottom: 50px; }
+        
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        
+        /* Eingabefeld Box */
+        .input-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            border: 1px solid #ddd; 
+            box-sizing: border-box; /* Verhindert, dass Padding die Breite sprengt */
+            font-size: 16px;
+        }
+        
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: bold; 
+            transition: 0.2s; 
+        }
+        button:hover { background: #0056b3; }
+
+        /* Nachrichten Feed */
+        .post { 
+            background: white; 
+            margin-top: 15px; 
+            padding: 15px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.4s ease-out; 
+            border-left: 5px solid #007bff;
+        }
+        
+        .post h3 { margin: 0 0 5px 0; font-size: 1.1em; color: #333; }
+        .post p { margin: 0; color: #555; line-height: 1.4; }
+        .post .time { font-size: 0.8em; color: #999; display: block; margin-top: 10px; text-align: right; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏫 K-Systems Feed</h1>
+    
+    <div class="input-box">
+        <input type="text" id="nameInput" placeholder="Dein Name">
+        <textarea id="msgInput" rows="3" placeholder="Was gibt es Neues?"></textarea>
+        <button id="sendBtn">Senden 🚀</button>
+    </div>
+
+    <div id="feed">
+        <p style="text-align:center; color:#999;">Lade Nachrichten...</p>
+    </div>
+</div>
+
+<script type="module">
+  // Wir nutzen hier die Web-Versionen der Bibliotheken (CDN), damit es ohne Installation läuft
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // DEINE KONFIGURATION (habe ich eingefügt)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1lOo3wm36dSi1Ec574tGaoySlg_783gI",
+    authDomain: "k-systems-7f298.firebaseapp.com",
+    projectId: "k-systems-7f298",
+    storageBucket: "k-systems-7f298.firebasestorage.app",
+    messagingSenderId: "768481373703",
+    appId: "1:768481373703:web:64f3e07ceba8a6b0c7c4a2",
+    measurementId: "G-R3JNW22EZ8"
+  };
+
+  // 1. Firebase starten
+  const app = initializeApp(firebaseConfig);
+  
+  // 2. Datenbank (Firestore) Verbindung herstellen
+  const db = getFirestore(app);
+
+  // --- LOGIK: NACHRICHT SENDEN ---
+  document.getElementById('sendBtn').addEventListener('click', async () => {
+      const name = document.getElementById('nameInput').value;
+      const msg = document.getElementById('msgInput').value;
+
+      if (name.trim() === "" || msg.trim() === "") {
+          alert("Bitte Namen und Nachricht eingeben!");
+          return;
+      }
+
+      try {
+          document.getElementById('sendBtn').innerText = "Sende...";
+          // Speichert Daten in der Sammlung "schul_chat"
+          await addDoc(collection(db, "schul_chat"), {
+              user: name,
+              text: msg,
+              timestamp: serverTimestamp() 
+          });
+          
+          // Felder leeren
+          document.getElementById('msgInput').value = "";
+          document.getElementById('sendBtn').innerText = "Senden 🚀";
+      } catch (e) {
+          console.error("Fehler: ", e);
+          alert("Fehler beim Senden! Hast du die Datenbank erstellt? (Firestore Database)");
+          document.getElementById('sendBtn').innerText = "Senden 🚀";
+      }
+  });
+
+  // --- LOGIK: NACHRICHTEN EMPFANGEN (LIVE) ---
+  // Wir sortieren nach Zeit (neueste zuerst: 'desc')
+  const q = query(collection(db, "schul_chat"), orderBy("timestamp", "desc"));
+  
+  onSnapshot(q, (snapshot) => {
+      const feed = document.getElementById('feed');
+      feed.innerHTML = ""; // Liste leeren
+      
+      if (snapshot.empty) {
+          feed.innerHTML = "<p style='text-align:center; color:#999;'>Noch keine Nachrichten.</p>";
+      }
+
+      snapshot.forEach((doc) => {
+          const data = doc.data();
+          // Zeit formatieren (falls vorhanden)
+          let timeString = "";
+          if (data.timestamp) {
+              const date = data.timestamp.toDate();
+              timeString = date.getHours() + ":" + (date.getMinutes()<10?'0':'') + date.getMinutes();
+          }
+
+          const postHTML = `
+            <div class="post">
+                <h3>${data.user}</h3>
+                <p>${data.text}</p>
+                <span class="time">${timeString}</span>
+            </div>
+          `;
+          feed.innerHTML += postHTML;
+      });
+  });
+</script>
+
+</body>
+</html>
