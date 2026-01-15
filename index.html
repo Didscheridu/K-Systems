@@ -2,172 +2,202 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>K-Systems Schul-Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Systems Schul-Login</title>
     <style>
-        /* Design */
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f4f6f8; 
-            color: #333; 
-            display: flex; 
-            justify-content: center; 
-            margin: 0;
-            padding-top: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
-        .container { width: 90%; max-width: 500px; padding-bottom: 50px; }
-        
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
-        
-        /* Eingabefeld Box */
-        .input-box {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+
+        /* Container für Login und App */
+        .container { width: 90%; max-width: 400px; padding: 20px; }
+
+        /* Login Box Styles */
+        .auth-box {
+            background: white; padding: 30px; border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center;
         }
-        
-        input, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            border-radius: 8px; 
-            border: 1px solid #ddd; 
-            box-sizing: border-box; /* Verhindert, dass Padding die Breite sprengt */
-            font-size: 16px;
+        .auth-box h2 { margin-top: 0; color: #333; }
+        .hidden { display: none !important; }
+
+        input {
+            width: 100%; padding: 12px; margin: 8px 0;
+            border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px;
         }
-        
-        button { 
-            width: 100%; 
-            padding: 12px; 
-            background: #007bff; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            font-weight: bold; 
-            transition: 0.2s; 
+
+        button {
+            width: 100%; padding: 12px; margin-top: 10px;
+            background: #007bff; color: white; border: none; border-radius: 6px;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         button:hover { background: #0056b3; }
-
-        /* Nachrichten Feed */
-        .post { 
-            background: white; 
-            margin-top: 15px; 
-            padding: 15px; 
-            border-radius: 10px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            animation: fadeIn 0.4s ease-out; 
-            border-left: 5px solid #007bff;
+        
+        .switch-btn {
+            background: none; color: #007bff; margin-top: 10px; font-weight: normal; font-size: 14px;
         }
+        .switch-btn:hover { background: none; text-decoration: underline; color: #0056b3; }
+
+        /* Chat Styles (App) */
+        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logout-btn { background: #dc3545; width: auto; padding: 5px 15px; font-size: 14px; }
         
-        .post h3 { margin: 0 0 5px 0; font-size: 1.1em; color: #333; }
-        .post p { margin: 0; color: #555; line-height: 1.4; }
-        .post .time { font-size: 0.8em; color: #999; display: block; margin-top: 10px; text-align: right; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .post { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .post small { color: #888; font-size: 12px; }
+        .post h4 { margin: 0 0 5px 0; color: #007bff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🏫 K-Systems Feed</h1>
-    
-    <div class="input-box">
-        <input type="text" id="nameInput" placeholder="Dein Name">
-        <textarea id="msgInput" rows="3" placeholder="Was gibt es Neues?"></textarea>
-        <button id="sendBtn">Senden 🚀</button>
+
+    <div id="authContainer" class="auth-box">
+        <h2 id="authTitle">Anmelden</h2>
+        <input type="email" id="emailInput" placeholder="E-Mail Adresse">
+        <input type="password" id="passwordInput" placeholder="Passwort">
+        
+        <button id="authBtn">Einloggen</button>
+        <button id="toggleBtn" class="switch-btn">Kein Konto? Registrieren</button>
+        <p id="errorMsg" style="color: red; font-size: 14px; display: none;"></p>
     </div>
 
-    <div id="feed">
-        <p style="text-align:center; color:#999;">Lade Nachrichten...</p>
+    <div id="appContainer" class="hidden">
+        <div class="app-header">
+            <h3>🏫 K-Systems Feed</h3>
+            <button id="logoutBtn" class="logout-btn">Abmelden</button>
+        </div>
+
+        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+            <textarea id="msgInput" style="width:100%; height:60px; border:1px solid #ddd; padding:10px; border-radius:6px;" placeholder="Nachricht schreiben..."></textarea>
+            <button id="sendBtn">Senden 🚀</button>
+        </div>
+
+        <div id="feed">Lade Nachrichten...</div>
     </div>
+
 </div>
 
 <script type="module">
-  // Wir nutzen hier die Web-Versionen der Bibliotheken (CDN), damit es ohne Installation läuft
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } 
-    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  // DEINE KONFIGURATION (habe ich eingefügt)
-  const firebaseConfig = {
-    apiKey: "AIzaSyC1lOo3wm36dSi1Ec574tGaoySlg_783gI",
-    authDomain: "k-systems-7f298.firebaseapp.com",
-    projectId: "k-systems-7f298",
-    storageBucket: "k-systems-7f298.firebasestorage.app",
-    messagingSenderId: "768481373703",
-    appId: "1:768481373703:web:64f3e07ceba8a6b0c7c4a2",
-    measurementId: "G-R3JNW22EZ8"
-  };
+    // Deine Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyC1lOo3wm36dSi1Ec574tGaoySlg_783gI",
+        authDomain: "k-systems-7f298.firebaseapp.com",
+        projectId: "k-systems-7f298",
+        storageBucket: "k-systems-7f298.firebasestorage.app",
+        messagingSenderId: "768481373703",
+        appId: "1:768481373703:web:64f3e07ceba8a6b0c7c4a2",
+        measurementId: "G-R3JNW22EZ8"
+    };
 
-  // 1. Firebase starten
-  const app = initializeApp(firebaseConfig);
-  
-  // 2. Datenbank (Firestore) Verbindung herstellen
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-  // --- LOGIK: NACHRICHT SENDEN ---
-  document.getElementById('sendBtn').addEventListener('click', async () => {
-      const name = document.getElementById('nameInput').value;
-      const msg = document.getElementById('msgInput').value;
+    // Elemente holen
+    const authContainer = document.getElementById('authContainer');
+    const appContainer = document.getElementById('appContainer');
+    const authTitle = document.getElementById('authTitle');
+    const authBtn = document.getElementById('authBtn');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const errorMsg = document.getElementById('errorMsg');
 
-      if (name.trim() === "" || msg.trim() === "") {
-          alert("Bitte Namen und Nachricht eingeben!");
-          return;
-      }
+    let isLoginMode = true; // Merken, ob wir gerade Login oder Registrieren machen
 
-      try {
-          document.getElementById('sendBtn').innerText = "Sende...";
-          // Speichert Daten in der Sammlung "schul_chat"
-          await addDoc(collection(db, "schul_chat"), {
-              user: name,
-              text: msg,
-              timestamp: serverTimestamp() 
-          });
-          
-          // Felder leeren
-          document.getElementById('msgInput').value = "";
-          document.getElementById('sendBtn').innerText = "Senden 🚀";
-      } catch (e) {
-          console.error("Fehler: ", e);
-          alert("Fehler beim Senden! Hast du die Datenbank erstellt? (Firestore Database)");
-          document.getElementById('sendBtn').innerText = "Senden 🚀";
-      }
-  });
+    // Prüfen, ob User eingeloggt ist
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // User ist da -> Login weg, Chat zeigen
+            authContainer.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            document.body.style.alignItems = "flex-start"; // Layout anpassen
+            loadChat(); // Chat starten
+        } else {
+            // Niemand da -> Login zeigen, Chat weg
+            authContainer.classList.remove('hidden');
+            appContainer.classList.add('hidden');
+            document.body.style.alignItems = "center";
+        }
+    });
 
-  // --- LOGIK: NACHRICHTEN EMPFANGEN (LIVE) ---
-  // Wir sortieren nach Zeit (neueste zuerst: 'desc')
-  const q = query(collection(db, "schul_chat"), orderBy("timestamp", "desc"));
-  
-  onSnapshot(q, (snapshot) => {
-      const feed = document.getElementById('feed');
-      feed.innerHTML = ""; // Liste leeren
-      
-      if (snapshot.empty) {
-          feed.innerHTML = "<p style='text-align:center; color:#999;'>Noch keine Nachrichten.</p>";
-      }
+    // Umschalten zwischen Login und Registrieren
+    toggleBtn.addEventListener('click', () => {
+        isLoginMode = !isLoginMode;
+        if (isLoginMode) {
+            authTitle.innerText = "Anmelden";
+            authBtn.innerText = "Einloggen";
+            toggleBtn.innerText = "Kein Konto? Registrieren";
+        } else {
+            authTitle.innerText = "Konto erstellen";
+            authBtn.innerText = "Registrieren";
+            toggleBtn.innerText = "Zurück zum Login";
+        }
+        errorMsg.style.display = 'none';
+    });
 
-      snapshot.forEach((doc) => {
-          const data = doc.data();
-          // Zeit formatieren (falls vorhanden)
-          let timeString = "";
-          if (data.timestamp) {
-              const date = data.timestamp.toDate();
-              timeString = date.getHours() + ":" + (date.getMinutes()<10?'0':'') + date.getMinutes();
-          }
+    // Login oder Registrieren Button Klick
+    authBtn.addEventListener('click', async () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
 
-          const postHTML = `
-            <div class="post">
-                <h3>${data.user}</h3>
-                <p>${data.text}</p>
-                <span class="time">${timeString}</span>
-            </div>
-          `;
-          feed.innerHTML += postHTML;
-      });
-  });
+        try {
+            if (isLoginMode) {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+        } catch (error) {
+            errorMsg.innerText = error.message;
+            errorMsg.style.display = 'block';
+        }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        signOut(auth);
+    });
+
+    // --- CHAT LOGIK (fast gleich wie vorher) ---
+    function loadChat() {
+        const q = query(collection(db, "schul_chat"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const userEmail = data.user || "Unbekannt";
+                // Nur den Teil vor dem @ anzeigen als Name
+                const shortName = userEmail.split('@')[0]; 
+                
+                feed.innerHTML += `
+                    <div class="post">
+                        <h4>${shortName}</h4>
+                        <p>${data.text}</p>
+                        <small>${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : '...'}</small>
+                    </div>`;
+            });
+        });
+
+        // Senden Button
+        document.getElementById('sendBtn').onclick = async () => {
+            const msg = document.getElementById('msgInput').value;
+            if (msg.trim() === "") return;
+            
+            await addDoc(collection(db, "schul_chat"), {
+                user: auth.currentUser.email, // Wir speichern jetzt die echte E-Mail!
+                text: msg,
+                timestamp: serverTimestamp()
+            });
+            document.getElementById('msgInput').value = "";
+        };
+    }
 </script>
 
 </body>
